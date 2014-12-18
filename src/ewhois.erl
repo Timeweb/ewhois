@@ -26,16 +26,22 @@ is_available(Domain) ->
     RawData = query(Domain, [raw]),
     Patterns = free_patterns(),
     CheckFun = fun(Pattern) ->
-                       case re:run(RawData, Pattern, [{capture, none}]) of
-                           match ->
-                               true;
-                           nomatch ->
-                               false
-                       end
-               end,
-    Result = lists:map(CheckFun, Patterns),
-    lists:member(true, Result).
-
+        case re:run(RawData, Pattern, [{capture, none}]) of
+            match ->
+                true;
+            nomatch ->
+                false
+        end
+    end,
+    LimitPatterns = limit_patterns(),
+    LimitResult = lists:map(CheckFun, LimitPatterns),
+    case lists:member(true, LimitResult) of
+        true ->
+            limit_exceeded;
+        false ->
+            Result = lists:map(CheckFun, Patterns),
+            lists:member(true, Result)
+    end.
 
 response(RawData, [raw | _T]) ->
     RawData;
@@ -105,25 +111,30 @@ get_root_nics(Domain) ->
 
 defined_nics() ->
     [
-     {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
-     {"whois.nic.fm", <<"^(.*)+fm">>},
-     {"mn.whois-servers.net", <<"^(.*)+mn">>},
-     {"whois.belizenic.bz", <<"^(.*)+bz">>}
+        {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
+        {"whois.nic.fm", <<"^(.*)+fm">>},
+        {"mn.whois-servers.net", <<"^(.*)+mn">>},
+        {"whois.belizenic.bz", <<"^(.*)+bz">>}
     ].
 
 
 free_patterns() ->
     [
-     "No entries found for the selected",
-     "No match for",
-     "NOT FOUND",
-     "Not found:",
-     "No match",
-     "not found in database",
-     "Nothing found for this query",
-     "Status: AVAILABLE",
-     "Status:\tAVAILABLE",
-     "Status: Not Registered",
-     "NOT FOUND",
-     "Whois Error: No Match for" %% .bz
+        "No entries found for the selected",
+        "No match for",
+        "NOT FOUND",
+        "Not found:",
+        "No match",
+        "not found in database",
+        "Nothing found for this query",
+        "Status: AVAILABLE",
+        "Status:\tAVAILABLE",
+        "Status: Not Registered",
+        "NOT FOUND",
+        "Whois Error: No Match for" %% .bz
+    ].
+
+limit_patterns() ->
+    [
+        "Lookup quota exceeded"
     ].
