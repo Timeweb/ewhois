@@ -112,7 +112,7 @@ get_root_nics(Domain) ->
 % TODO: move it to config file
 defined_nics() ->
   [
-    {"whois.tucows.com", <<"^(.*)+.(org|info|biz)$">>},
+    {"whois.tucows.com", <<"^(.*)+.(com|org|info|biz)$">>},
     {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
     {"whois.nic.fm", <<"^(.*)+fm">>},
     {"mn.whois-servers.net", <<"^(.*)+mn">>},
@@ -133,7 +133,8 @@ free_patterns() ->
         "Status:\tAVAILABLE",
         "Status: Not Registered",
         "NOT FOUND",
-        "Whois Error: No Match for" %% .bz
+        "Whois Error: No Match for", %% .bz
+        "Can't get information on non-local domain" %% tucows
     ].
 
 limit_patterns() ->
