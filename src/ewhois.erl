@@ -3,6 +3,7 @@
 -export([query/1]).
 -export([query/2]).
 -export([is_available/1]).
+-export([is_available/2]).
 
 -define(IANAHOST, "whois.iana.org").
 -define(TIMEOUT, 15000).
@@ -23,6 +24,23 @@ query(Domain, Opts) when is_binary(Domain), is_list(Opts) ->
 
 
 is_available(Domain) ->
+    is_available(Domain, undefined).
+
+is_available(Domain, eurodns) ->
+    {ok, EuroDNSConf} = application:get_env(portal, eurodns),
+    URL = proplists:get_value(url, EuroDNSConf),
+    UserName = proplists:get_value(username, EuroDNSConf),
+    Password = proplists:get_value(password, EuroDNSConf),
+    Body = build_eurodns_request(Domain),
+    Request = {URL, [basic_auth_header(UserName, Password)], "application/x-www-form-urlencoded", Body},
+    {ok, {{"HTTP/1.1",200,"OK"}, _, Response}} = httpc:request(post, Request, [], []),
+    case re:run(Response, "This domain is available", [{capture, none}]) of
+        match ->
+            true;
+        nomatch ->
+            false
+    end;
+is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
     Patterns = free_patterns(),
     CheckFun = fun(Pattern) ->
@@ -42,6 +60,16 @@ is_available(Domain) ->
             Result = lists:map(CheckFun, Patterns),
             lists:member(true, Result)
     end.
+
+build_eurodns_request(FQDN) ->
+    %TODO urlencoded xml instead raw string
+    lists:flatten(["xml=%3C%3Fxml+version%3D%221.0%22+encoding%3D%22UTF-8%22%3F%3E++%09%09%09%3Crequest+
+xmlns%3Adomain%3D%22http%3A%2F%2Fwww.eurodns.com%2Fdomain%22%3E++%09%09%09%09%3Cdomain%3Acheck%3E++
+%09%09%09%09%09%3Cdomain%3Aname%3E", binary_to_list(FQDN), "%3C%2Fdomain%3Aname%3E++%3C%2Fdomain%3Acheck%3E%3C%2Frequest%3E"]).
+
+basic_auth_header(Username, Password) ->
+    Hash = base64:encode(<<Username/binary, $:, Password/binary>>),
+    {"Authorization", ["Basic ", binary_to_list(Hash)]}.
 
 response(RawData, [raw | _T]) ->
     RawData;
@@ -111,13 +139,13 @@ get_root_nics(Domain) ->
 
 % TODO: move it to config file
 defined_nics() ->
-  [
-    {"whois.tucows.com", <<"^(.*)+.(com|org|info|biz)$">>},
-    {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
-    {"whois.nic.fm", <<"^(.*)+fm">>},
-    {"mn.whois-servers.net", <<"^(.*)+mn">>},
-    {"whois.belizenic.bz", <<"^(.*)+bz">>}
-  ].
+    [
+        {"whois.tucows.com", <<"^(.*)+.(com|org|info|biz)$">>},
+        {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
+        {"whois.nic.fm", <<"^(.*)+fm">>},
+        {"mn.whois-servers.net", <<"^(.*)+mn">>},
+        {"whois.belizenic.bz", <<"^(.*)+bz">>}
+    ].
 
 
 free_patterns() ->
