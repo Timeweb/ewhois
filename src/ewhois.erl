@@ -109,9 +109,9 @@ get_root_nics(Domain) ->
     end.
 
 
+% TODO: move it to config file
 defined_nics() ->
   [
-    {"whois.networksolutions.com", <<"^(.*)+.(com)$">>},
     {"whois.tucows.com", <<"^(.*)+.(org|info|biz)$">>},
     {"whois.r01.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
     {"whois.nic.fm", <<"^(.*)+fm">>},
