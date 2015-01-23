@@ -34,11 +34,12 @@ is_available(Domain, eurodns) ->
     Body = build_eurodns_request(Domain),
     Request = {URL, [basic_auth_header(UserName, Password)], "application/x-www-form-urlencoded", Body},
     {ok, {{"HTTP/1.1",200,"OK"}, _, Response}} = httpc:request(post, Request, [], []),
-    case re:run(Response, "This domain is available", [{capture, none}]) of
-        match ->
-            true;
-        nomatch ->
-            false
+    case ewhois_parser:get_eurodns_domain_status(Response) of
+        {ok, true} -> true;
+        {ok, false} -> false;
+        {error, Other} ->
+            lager:error(Other),
+            {error, eurodns_bad_response}
     end;
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
