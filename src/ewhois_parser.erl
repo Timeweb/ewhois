@@ -92,5 +92,19 @@ get_eurodns_domain_status(XML) ->
                   [{"lang","en"},{"code","100"}],
                   ["This domain is available"]}]}]}]}]},
       "\n"} -> {ok, true};
+    {ok,{"response",[],
+      [{"result",
+        [{"code","1000"}],
+        [{"msg",[],["Command completed successfully"]}]},
+        {"resData",[],
+          [{"{http://www.eurodns.com/domain}check",[],
+            [{"{http://www.eurodns.com/domain}cd",[],
+              [{"{http://www.eurodns.com/domain}name",
+                [{"avail","false"}],
+                [_Domain]},
+                {"{http://www.eurodns.com/domain}reason",
+                  [{"lang","en"},{"code", Code}],
+                  [_Msg]}]}]}]}]},
+      "\n"} -> {error, Code};
     Other -> {error, Other}
   end.

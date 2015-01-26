@@ -37,9 +37,11 @@ is_available(Domain, eurodns) ->
     case ewhois_parser:get_eurodns_domain_status(Response) of
         {ok, true} -> true;
         {ok, false} -> false;
+        {error, Code} when Code =:= "210"->
+            bad_domain_name;
         {error, Other} ->
             lager:error(Other),
-            {error, eurodns_bad_response}
+            eurodns_bad_response
     end;
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
