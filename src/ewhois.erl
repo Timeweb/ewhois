@@ -163,6 +163,7 @@ free_patterns() ->
         "Status:\tAVAILABLE",
         "Status: Not Registered",
         "NOT FOUND",
+        "Domain not found", %% .villas
         "Whois Error: No Match for", %% .bz
         "Can't get information on non-local domain" %% tucows
     ].
