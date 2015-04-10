@@ -1,5 +1,6 @@
 -module(ewhois).
 
+-export([start/0]).
 -export([query/1]).
 -export([query/2]).
 -export([is_available/1]).
@@ -9,6 +10,21 @@
 -define(TIMEOUT, 15000).
 -define(PORT, 43).
 -define(OPTS, [{port, ?PORT}, {timeout, ?TIMEOUT}]).
+
+start() ->
+    application:start(ewhois),
+    load_config().
+
+load_config() ->
+    {ok, FileName} = application:get_env(ewhois, config),
+    case file:consult(FileName) of
+        {ok,[[{ewhois, Proplist}]]} ->
+            Providers = proplists:get_value(providers, Proplist),
+            application:set_env(ewhois, providers, Providers),
+            ok;
+        Other ->
+            Other
+    end.
 
 query(Domain) ->
     query(Domain, ?OPTS).
@@ -139,15 +155,9 @@ get_root_nics(Domain) ->
             {error, Reason}
     end.
 
-
-% TODO: move it to config file
 defined_nics() ->
-    [
-        {"whois.nic.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
-        {"whois.nic.fm", <<"^(.*)+fm">>},
-        {"mn.whois-servers.net", <<"^(.*)+mn">>},
-        {"whois.belizenic.bz", <<"^(.*)+bz">>}
-    ].
+    {ok, Providers} = application:get_env(ewhois, providers),
+    Providers.
 
 
 free_patterns() ->

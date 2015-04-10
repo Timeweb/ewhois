@@ -1,11 +1,12 @@
 {application, ewhois,
  [
   {description, "Erlang whois client"},
-  {vsn, "0.9.2"},
+  {vsn, "0.9.3"},
   {registered, []},
   {applications, [
                   kernel,
                   stdlib
                  ]},
-  {env, []}
- ]}.
+  {env, [{config, "deps/ewhois/config/ewhois.config"}]}
+ ]
+}.
