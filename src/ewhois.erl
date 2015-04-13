@@ -19,8 +19,7 @@ load_config() ->
     {ok, FileName} = application:get_env(ewhois, config),
     case file:consult(FileName) of
         {ok,[[{ewhois, Proplist}]]} ->
-            Providers = proplists:get_value(providers, Proplist),
-            application:set_env(ewhois, providers, Providers),
+            [application:set_env(ewhois, Section, Config) || {Section, Config} <- Proplist],
             ok;
         Other ->
             Other
@@ -51,17 +50,17 @@ is_available(Domain, eurodns) ->
     Request = {URL, [basic_auth_header(UserName, Password)], "application/x-www-form-urlencoded", Body},
     {ok, {{"HTTP/1.1",200,"OK"}, _, Response}} = httpc:request(post, Request, [], []),
     case ewhois_parser:get_eurodns_domain_status(Response) of
-        {ok, true} -> true;
-        {ok, false} -> false;
-        {error, Code} when Code =:= "210"->
-            bad_domain_name;
+        {ok, true} -> {ok, true};
+        {ok, false} -> {ok, false};
+        {error, "210"} ->
+            {error, bad_domain_name};
         {error, Other} ->
             lager:error(Other),
-            eurodns_bad_response
+            {error, eurodns_bad_response}
     end;
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
-    Patterns = free_patterns(),
+    Patterns = get_config(free_patterns),
     CheckFun = fun(Pattern) ->
         case re:run(RawData, Pattern, [{capture, none}]) of
             match ->
@@ -74,10 +73,10 @@ is_available(Domain, _) ->
     LimitResult = lists:map(CheckFun, LimitPatterns),
     case lists:member(true, LimitResult) of
         true ->
-            limit_exceeded;
+            {error, limit_exceeded};
         false ->
             Result = lists:map(CheckFun, Patterns),
-            lists:member(true, Result)
+            {ok, lists:member(true, Result)}
     end.
 
 build_eurodns_request(FQDN) ->
@@ -124,7 +123,7 @@ recv(Sock, Acc) ->
 
 
 get_nic(Domain) ->
-    case get_nic(Domain, defined_nics()) of
+    case get_nic(Domain, get_config(providers)) of
         undefined ->
             get_root_nics(Domain);
         {ok, Nic} ->
@@ -155,28 +154,9 @@ get_root_nics(Domain) ->
             {error, Reason}
     end.
 
-defined_nics() ->
-    {ok, Providers} = application:get_env(ewhois, providers),
-    Providers.
-
-
-free_patterns() ->
-    [
-        "No entries found for the selected",
-        "No match for",
-        "NOT FOUND",
-        "Not found:",
-        "No match",
-        "not found in database",
-        "Nothing found for this query",
-        "Status: AVAILABLE",
-        "Status:\tAVAILABLE",
-        "Status: Not Registered",
-        "NOT FOUND",
-        "Domain not found", %% .villas
-        "Whois Error: No Match for", %% .bz
-        "Can't get information on non-local domain" %% tucows
-    ].
+get_config(Section) ->
+    {ok, Config} = application:get_env(ewhois, Section),
+    Config.
 
 limit_patterns() ->
     [
