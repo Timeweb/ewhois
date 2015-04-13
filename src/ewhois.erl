@@ -61,22 +61,31 @@ is_available(Domain, eurodns) ->
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
     Patterns = get_config(free_patterns),
-    CheckFun = fun(Pattern) ->
-        case re:run(RawData, Pattern, [{capture, none}]) of
-            match ->
-                true;
-            nomatch ->
-                false
-        end
-    end,
-    LimitPatterns = limit_patterns(),
-    LimitResult = lists:map(CheckFun, LimitPatterns),
-    case lists:member(true, LimitResult) of
+    case check_pattern(limit_patterns(), RawData) of
         true ->
             {error, limit_exceeded};
         false ->
-            Result = lists:map(CheckFun, Patterns),
-            {ok, lists:member(true, Result)}
+            case check_pattern(error_patterns(), RawData) of
+                true ->
+                    {error, bad_request};
+                false ->
+                    case check_pattern(Patterns, RawData) of
+                        true ->
+                            {ok, true};
+                        false ->
+                            {ok, false}
+                    end
+            end
+    end.
+
+check_pattern([], _RawData) ->
+    false;
+check_pattern([Pattern|Tail], RawData) ->
+    case re:run(RawData, Pattern, [{capture, none}]) of
+        match ->
+            true;
+        nomatch ->
+            check_pattern(Tail, RawData)
     end.
 
 build_eurodns_request(FQDN) ->
@@ -166,4 +175,11 @@ get_config(Section) ->
 limit_patterns() ->
     [
         "Lookup quota exceeded"
+    ].
+
+
+error_patterns() ->
+    [
+        "Error: Invalid query",
+        "This name is not available for registration"
     ].
