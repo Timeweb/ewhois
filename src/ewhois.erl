@@ -102,13 +102,18 @@ send_query(Domain, Nic, Opts) when is_list(Nic) ->
     Timeout = proplists:get_value(timeout, Opts, ?TIMEOUT),
     case gen_tcp:connect(Nic, Port, [binary, {active, false}, {packet, 0}, {send_timeout, Timeout}], Timeout) of
         {ok, Sock} ->
-            ok = gen_tcp:send(Sock, iolist_to_binary([Domain, <<"\r\n">>])),
+            ok = gen_tcp:send(Sock, build_whois_request(Nic, Domain)),
             Reply = recv(Sock),
             ok = gen_tcp:close(Sock),
             {ok, Reply};
         {error, Reason} ->
             {error, Reason}
     end.
+
+build_whois_request("whois.online.rs.corenic.net", Domain) ->
+    iolist_to_binary(["-C UTF-8 ", Domain, <<"\r\n">>]);
+build_whois_request(_, Domain) ->
+    iolist_to_binary([Domain, <<"\r\n">>]).
 
 recv(Sock) ->
     recv(Sock, []).
