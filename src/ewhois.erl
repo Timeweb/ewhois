@@ -1,6 +1,6 @@
 -module(ewhois).
 
--export([start/0]).
+-export([start/1]).
 -export([query/1]).
 -export([query/2]).
 -export([is_available/1]).
@@ -11,12 +11,11 @@
 -define(PORT, 43).
 -define(OPTS, [{port, ?PORT}, {timeout, ?TIMEOUT}]).
 
-start() ->
+start(Config) ->
     application:start(ewhois),
-    load_config().
+    load_config(Config).
 
-load_config() ->
-    {ok, FileName} = application:get_env(ewhois, config),
+load_config({ok, FileName}) ->
     case file:consult(FileName) of
         {ok,[[{ewhois, Proplist}]]} ->
             [application:set_env(ewhois, Section, Config) || {Section, Config} <- Proplist],
