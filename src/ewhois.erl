@@ -119,7 +119,7 @@ send_query(Domain, Nic, Opts) when is_list(Nic) ->
             {error, Reason}
     end.
 
-build_whois_request("whois.online.rs.corenic.net", Domain) ->
+build_whois_request(Nic, Domain) when Nic =:= "whois.online.rs.corenic.net"; Nic =:= "whois.site.rs.corenic.net" ->
     iolist_to_binary(["-C UTF-8 ", Domain, <<"\r\n">>]);
 build_whois_request(_, Domain) ->
     iolist_to_binary([Domain, <<"\r\n">>]).
