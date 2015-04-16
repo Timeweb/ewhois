@@ -1,6 +1,7 @@
 -module(ewhois).
 
--export([start/1]).
+-include_lib("ewhois/include/providers.hrl").
+
 -export([query/1]).
 -export([query/2]).
 -export([is_available/1]).
@@ -10,19 +11,6 @@
 -define(TIMEOUT, 15000).
 -define(PORT, 43).
 -define(OPTS, [{port, ?PORT}, {timeout, ?TIMEOUT}]).
-
-start(Config) ->
-    application:start(ewhois),
-    load_config(Config).
-
-load_config({ok, FileName}) ->
-    case file:consult(FileName) of
-        {ok,[[{ewhois, Proplist}]]} ->
-            [application:set_env(ewhois, Section, Config) || {Section, Config} <- Proplist],
-            ok;
-        Other ->
-            Other
-    end.
 
 query(Domain) ->
     query(Domain, ?OPTS).
@@ -35,7 +23,6 @@ query(Domain, Opts) when is_binary(Domain), is_list(Opts) ->
         {error, Reason} ->
             {error, Reason}
     end.
-
 
 is_available(Domain) ->
     is_available(Domain, undefined).
@@ -59,7 +46,6 @@ is_available(Domain, eurodns) ->
     end;
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
-    Patterns = get_config(free_patterns),
     case check_pattern(limit_patterns(), RawData) of
         true ->
             {error, limit_exceeded};
@@ -68,7 +54,7 @@ is_available(Domain, _) ->
                 true ->
                     {error, bad_request};
                 false ->
-                    case check_pattern(Patterns, RawData) of
+                    case check_pattern(?FREE_PATTERNS, RawData) of
                         true ->
                             {ok, true};
                         false ->
@@ -104,7 +90,6 @@ response(RawData, [bind | _T]) ->
 response(RawData, _Opts) ->
     ewhois_parser:parse_vals(RawData).
 
-
 send_query(Domain, Nic, Opts) when is_list(Nic) ->
     Port = proplists:get_value(port, Opts, ?PORT),
     Timeout = proplists:get_value(timeout, Opts, ?TIMEOUT),
@@ -136,7 +121,7 @@ recv(Sock, Acc) ->
 
 
 get_nic(Domain) ->
-    case get_nic(Domain, get_config(providers)) of
+    case get_nic(Domain, ?PRVIDERS) of
         undefined ->
             get_root_nics(Domain);
         {ok, Nic} ->
@@ -153,7 +138,6 @@ get_nic(Domain, [{Nic, Re} | Nics]) ->
             get_nic(Domain, Nics)
     end.
 
-
 get_root_nics(Domain) ->
     case send_query(Domain, ?IANAHOST, ?OPTS) of
         {ok, Result} ->
@@ -166,10 +150,6 @@ get_root_nics(Domain) ->
         {error, Reason} ->
             {error, Reason}
     end.
-
-get_config(Section) ->
-    {ok, Config} = application:get_env(ewhois, Section),
-    Config.
 
 limit_patterns() ->
     [
