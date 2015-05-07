@@ -14,7 +14,6 @@ rel/reltool.config
 rel/.curvsn
 logs*
 variables-ct*
-.eunit
 crash.log*
 *~
 erl_crash.dump
