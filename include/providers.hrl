@@ -1,9 +1,9 @@
 -define(PRVIDERS, [
   {"whois.tcinet.ru", <<"^.*com.ru$">>},
   {"whois.nic.ru", <<"^(.*)+.(org|net|com|msk|spb|nov|sochi).ru$">>},
-  {"whois.nic.fm", <<"^(.*)+fm">>},
-  {"mn.whois-servers.net", <<"^(.*)+mn">>},
-  {"whois.belizenic.bz", <<"^(.*)+bz">>},
+  {"whois.nic.fm", <<"^(.*)+fm$">>},
+  {"mn.whois-servers.net", <<"^(.*)+mn$">>},
+  {"whois.belizenic.bz", <<"^(.*)+bz$">>},
   {"whois.online.rs.corenic.net", <<"^.*xn--80asehdb$">>}, %.онлайн
   {"whois.site.rs.corenic.net", <<"^.*.xn--80aswg$">>}, %.сайт
   {"whois.nic.menu", <<"^.*menu$">>},
@@ -33,5 +33,6 @@
   "Can't get information on non-local domain", %% tucows
   "is available for\n>>> registration",
   "is available\n>>> for registration",
-  "available for registration"
+  "available for registration",
+  "No entries found for"
 ]).

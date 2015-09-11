@@ -19,7 +19,13 @@ query(Domain, Opts) when is_binary(Domain), is_list(Opts) ->
     Nic = proplists:get_value(nic, Opts, get_nic(Domain)),
     case send_query(Domain, Nic, Opts) of
         {ok, Reply} ->
-            response(Reply, Opts);
+            case response(Reply, Opts) of
+                [] -> case is_available(Domain) of
+                          {ok, true} -> [{status, <<"Not Registered">>}];
+                          _ -> [{status, <<"Registered">>}]
+                      end;
+                R -> R
+            end;
         {error, Reason} ->
             {error, Reason}
     end.
