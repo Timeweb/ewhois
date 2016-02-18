@@ -1,5 +1,4 @@
 -define(PRVIDERS, [
-  {"whois.tcinet.ru", <<"^.*com.ru$">>},
   {"whois.nic.ru", <<"^(.*)+\\.(org|net|com|msk|spb|nov|sochi).ru$">>},
   {"whois.nic.fm", <<"^(.*)+fm$">>},
   {"mn.whois-servers.net", <<"^(.*)+mn$">>},
