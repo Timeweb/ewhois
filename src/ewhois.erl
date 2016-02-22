@@ -127,7 +127,7 @@ recv(Sock, Acc) ->
 
 
 get_nic(Domain) ->
-    case get_nic(Domain, ?PRVIDERS) of
+    case get_nic(Domain, ?PROVIDERS) of
         undefined ->
             get_root_nics(Domain);
         {ok, Nic} ->
