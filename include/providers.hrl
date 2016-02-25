@@ -35,5 +35,6 @@
   "is available for\n>>> registration",
   "is available\n>>> for registration",
   "available for registration",
-  "No entries found for"
+  "No entries found for",
+  "The queried object does not exist"
 ]).
