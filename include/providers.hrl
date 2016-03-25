@@ -1,5 +1,6 @@
 -define(PROVIDERS, [
-  {"whois.registrypro.pro", <<"^.*pro$">>},
+%%  {"whois.registrypro.pro", <<"^.*pro$">>}, %timeout now
+  {"whois.nic.pro", <<"^.*pro$">>},
   {"whois.nic.ru", <<"^(.*)+\\.(org|net|com|msk|spb|nov|sochi).ru$">>},
   {"whois.r01.ru", <<"^[\w\d\-]+\.ru$">>},
   {"whois.nic.fm", <<"^(.*)+fm$">>},
