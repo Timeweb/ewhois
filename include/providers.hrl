@@ -35,7 +35,7 @@
   "Can't get information on non-local domain", %% tucows
   "is available for\n>>> registration",
   "is available\n>>> for registration",
-  "available for registration",
+  "is(?! not) available for registration",
   "No entries found for",
   "The queried object does not exist"
 ]).
