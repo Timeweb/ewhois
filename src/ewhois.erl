@@ -71,13 +71,15 @@ is_available(Domain, _) ->
 
 check_pattern([], _RawData) ->
     false;
-check_pattern([Pattern|Tail], RawData) ->
+check_pattern([Pattern|Tail], RawData) when is_binary(RawData) ->
     case re:run(RawData, Pattern, [{capture, none}]) of
         match ->
             true;
         nomatch ->
             check_pattern(Tail, RawData)
-    end.
+    end;
+check_pattern(_, _RawData) ->
+    false.
 
 build_eurodns_request(FQDN) ->
     %TODO urlencoded xml instead raw string
