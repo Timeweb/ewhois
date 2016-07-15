@@ -64,16 +64,15 @@ is_available(Domain, _) ->
     try
         check_pattern(?LIMIT_PATTERNS, RawData, limit_exceeded),
         check_pattern(?ERROR_PATTERNS, RawData, bad_request),
-        check_pattern(?FREE_PATTERNS, RawData, resource_allowed)
+        check_pattern(?FREE_PATTERNS, RawData, resource_allowed),
+        {ok, false}
     catch
         resource_allowed ->
             {ok, true};
         limit_exceeded ->
             {error, limit_exceeded};
         bad_request ->
-            {error, bad_request};
-        _ ->
-            {ok, false}
+            {error, bad_request}
     end.
 
 -spec check_pattern(PatternList::list(), Data::binary(), MatchResult::atom()) -> boolean().
