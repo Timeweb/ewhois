@@ -77,11 +77,13 @@ is_available(Domain, _) ->
     end.
 
 -spec check_pattern(PatternList::list(), Data::binary(), MatchResult::atom()) -> boolean().
+check_pattern([], _Data, _MatchResult) ->
+    false;
 check_pattern([Pattern | Tail], Data, MatchResult) when is_binary(Data) ->
-    case re:run(Data, Pattern, [{caputure, none}]) of
-        true ->
+    case re:run(Data, Pattern, [{capture, none}]) of
+        match ->
             throw(MatchResult);
-        false ->
+        nomatch ->
             check_pattern(Tail, Data, MatchResult)
     end;
 check_pattern(_, {error, Reason}, _) ->
