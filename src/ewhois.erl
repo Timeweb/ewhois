@@ -12,6 +12,15 @@
 -define(PORT, 43).
 -define(OPTS, [{port, ?PORT}, {timeout, ?TIMEOUT}]).
 
+-define(LIMIT_PATTERNS, [
+    "Lookup quota exceeded"
+]).
+
+-define(ERROR_PATTERNS,     [
+    "Error: Invalid query",
+    "This name is not available for registration"
+]).
+
 query(Domain) ->
     query(Domain, ?OPTS).
 
@@ -52,34 +61,31 @@ is_available(Domain, eurodns) ->
     end;
 is_available(Domain, _) ->
     RawData = query(Domain, [raw]),
-    case check_pattern(limit_patterns(), RawData) of
-        true ->
+    try
+        check_pattern(?LIMIT_PATTERNS, RawData, limit_exceeded),
+        check_pattern(?ERROR_PATTERNS, RawData, bad_request),
+        check_pattern(?FREE_PATTERNS, RawData, resource_allowed)
+    catch
+        resource_allowed ->
+            {ok, true};
+        limit_exceeded ->
             {error, limit_exceeded};
-        false ->
-            case check_pattern(error_patterns(), RawData) of
-                true ->
-                    {error, bad_request};
-                false ->
-                    case check_pattern(?FREE_PATTERNS, RawData) of
-                        true ->
-                            {ok, true};
-                        false ->
-                            {ok, false}
-                    end
-            end
+        bad_request ->
+            {error, bad_request};
+        _ ->
+            {ok, false}
     end.
 
-check_pattern([], _RawData) ->
-    false;
-check_pattern([Pattern|Tail], RawData) when is_binary(RawData) ->
-    case re:run(RawData, Pattern, [{capture, none}]) of
-        match ->
-            true;
-        nomatch ->
-            check_pattern(Tail, RawData)
+-spec check_pattern(PatternList::list(), Data::binary(), MatchResult::atom()) -> boolean().
+check_pattern([Pattern | Tail], Data, MatchResult) when is_binary(Data) ->
+    case re:run(Data, Pattern, [{caputure, none}]) of
+        true ->
+            throw(MatchResult);
+        false ->
+            check_pattern(Tail, Data, MatchResult)
     end;
-check_pattern(_, _RawData) ->
-    false.
+check_pattern(_, {error, Reason}, _) ->
+    throw(Reason).
 
 build_eurodns_request(FQDN) ->
     %TODO urlencoded xml instead raw string
@@ -158,15 +164,3 @@ get_root_nics(Domain) ->
         {error, Reason} ->
             {error, Reason}
     end.
-
-limit_patterns() ->
-    [
-        "Lookup quota exceeded"
-    ].
-
-
-error_patterns() ->
-    [
-        "Error: Invalid query",
-        "This name is not available for registration"
-    ].
