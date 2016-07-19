@@ -72,7 +72,9 @@ is_available(Domain, _) ->
         limit_exceeded ->
             {error, limit_exceeded};
         bad_request ->
-            {error, bad_request}
+            {error, bad_request};
+        timeout ->
+            {error, timeout}
     end.
 
 -spec check_pattern(PatternList::list(), Data::binary(), MatchResult::atom()) -> boolean().
