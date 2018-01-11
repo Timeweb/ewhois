@@ -148,7 +148,8 @@ get_nic(Domain) ->
 get_nic(_Domain, []) ->
     undefined;
 get_nic(Domain, [{Nic, Re} | Nics]) ->
-    case re:run(Domain, Re) of
+    {ok, Re1} = re:compile(Re, [caseless]),
+    case re:run(Domain, Re1) of
         {match, _} ->
             {ok, Nic};
         nomatch ->
